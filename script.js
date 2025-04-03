@@ -49,7 +49,6 @@ let e_toast = document.getElementById("toast");
 const toast = {
     showText:(text)=>{
         e_toast.innerText = text;
-        console.log('desgraça ruim')
         e_toast.style.display = "block";
     },
     close:()=>{
@@ -148,14 +147,13 @@ function updateParams(){
     window.history.replaceState({}, '', url.href);
 }
 function validateValue(value, max, min){
-    value = parseInt(value);
     min = parseInt(min);
     max = parseInt(max);
     if(value == null){
         value = getRand(max, min)
-    } else if (value > max) {
+    } else if (parseInt(value) > max) {
         value = max;
-    } else if (value < min) {
+    } else if (parseInt(value) < min) {
         value = min;
     };
     return value;
