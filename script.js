@@ -49,6 +49,7 @@ let e_toast = document.getElementById("toast");
 const toast = {
     showText:(text)=>{
         e_toast.innerText = text;
+        console.log('desgraça ruim')
         e_toast.style.display = "block";
     },
     close:()=>{
@@ -67,15 +68,16 @@ e_image_frame.addEventListener("load", ()=>{toast.close()});//if the image is su
 e_image_frame.addEventListener("error", ()=>{toast.showText("❌ Failed to load the image!")})//if there is an error when loading the image, it will display a error msg
 e_selector_season.addEventListener('change',(e)=>{//case the season selector is changed
     SEL_SEASONID = e.target.value;//apply selected seasonID value
+    applyFrame();
     updateUILists();//reloads the episode list for the selected seasonID in the episodes selector
     updateParams();//update the url params
-    applyFrame();//finally apply the frame in the img element
+
 });
 e_selector_episode.addEventListener('change',(e)=>{
     SEL_EPISODEID = e.target.value;//apply selected episodeID value
     e_selector_frame.max = getAppliedOBJ().episode.frames; //apply the episode total frames as max number in the frames selector
+    applyFrame();
     updateParams();//update url params
-    applyFrame();//finally apply the frame
 });
 e_selector_frame.addEventListener('change',(e)=>{
     if(e.target.checkValidity()){ //checks if the value is a valid value (more than 0, less than total frames number (max))
@@ -95,32 +97,28 @@ e_btn_download.addEventListener('click',()=>{
             dle.download = `${DATA.name_alt}_${getAppliedOBJ().season.name}_${getAppliedOBJ().episode.name}_Frame-${SEL_FRAMENUM}.jpg`.replaceAll(" ","-");
             dle.click();
             toast.showText(`✅ File "${dle.download}" downloaded succefully!`);
-            setTimeout(toast.close(), 1000);
+            setTimeout(toast.close, 10000);
         };
         r.readAsDataURL(blob)
     });
 });
 e_btn_random.addEventListener('click', ()=>{
-    SEL_EPISODEID = 0;
-    SEL_FRAMENUM = 0;
-    SEL_SEASONID = 0;
+    SEL_EPISODEID = null;
+    SEL_FRAMENUM = null;
+    SEL_SEASONID = null;
+    applyFrame();
     updateParams();
     updateUILists();
     updateUIValues();
-    applyFrame();
 })
-
 
 function applyFrame(){//apply the selected frame in the img element
     toast.showText("⌛ Please Wait...");//shows the loading text in the screen
     //if the selected frame is null, generate a random number for it
     //(ex: when none params are specifield, the page will show a random frame)
-    if(SEL_SEASONID == null){SEL_SEASONID = getRand(DATA.seasons.length-1, 0); updateParams();};
-    if(SEL_EPISODEID == null){SEL_EPISODEID = getRand(getAppliedOBJ().season.episodes.length-1, 0); updateParams();};
-    if(SEL_FRAMENUM == null){SEL_FRAMENUM = getRand(getAppliedOBJ().episode.frames, 0); updateParams();};
-    SEL_SEASONID = Math.min(SEL_SEASONID,DATA.seasons.length);
-    SEL_EPISODEID = Math.min(SEL_EPISODEID,getAppliedOBJ().season.episodes.length);
-    SEL_FRAMENUM = Math.min(SEL_FRAMENUM, getAppliedOBJ().episode.frames);
+    SEL_SEASONID = validateValue(SEL_SEASONID, DATA.seasons.length-1, 0);
+    SEL_EPISODEID = validateValue(SEL_EPISODEID, getAppliedOBJ().season.episodes.length-1, 0);
+    SEL_FRAMENUM = validateValue(SEL_FRAMENUM, getAppliedOBJ().episode.frames, 1);
     e_image_frame.src = getImageUrl();//get the url, and apply the image in the img element
 }
 function getAppliedOBJ(){
@@ -148,4 +146,17 @@ function updateParams(){
     url.searchParams.set('epid', SEL_EPISODEID);
     url.searchParams.set('fr', SEL_FRAMENUM);
     window.history.replaceState({}, '', url.href);
+}
+function validateValue(value, max, min){
+    value = parseInt(value);
+    min = parseInt(min);
+    max = parseInt(max);
+    if(value == null){
+        value = getRand(max, min)
+    } else if (value > max) {
+        value = max;
+    } else if (value < min) {
+        value = min;
+    };
+    return value;
 }
