@@ -96,7 +96,7 @@ e_btn_download.addEventListener('click',()=>{
             dle.download = `${DATA.name_alt}_${getAppliedOBJ().season.name}_${getAppliedOBJ().episode.name}_Frame-${SEL_FRAMENUM}.jpg`.replaceAll(" ","-");
             dle.click();
             toast.showText(`✅ File "${dle.download}" downloaded succefully!`);
-            setTimeout(toast.close, 10000);
+            setTimeout(toast.close, 1000);
         };
         r.readAsDataURL(blob)
     });
