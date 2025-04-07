@@ -30,26 +30,26 @@ const DATA = {
     ]
 }
 
-//-------------------------code v0.2---------------------------
-//initial basic variables. Each SEL variable loads their respective params from url when the page loads
+//-------------------------code v0.2.5---------------------------
 let url = new URL(window.location.href);
 let SEL_SEASONID = url.searchParams.get('scid');
 let SEL_EPISODEID = url.searchParams.get('epid');
 let SEL_FRAMENUM = url.searchParams.get('fr');
 
-//element-related variables
+let page_title = document.querySelector('title');
 let e_selector_season = document.getElementById("selector-season");
 let e_selector_episode = document.getElementById("selector-episode");
 let e_selector_frame = document.getElementById("selector-frame");
 let e_image_frame = document.getElementById("image-frame");
 let e_btn_random = document.getElementById("btn-random");
 let e_btn_download = document.getElementById("btn-download");
+let e_btn_frameup = document.getElementById("btn-frameup");
+let e_btn_framedown = document.getElementById("btn-framedown")
 let e_toast = document.getElementById("toast");
-//function to show text info in the screen (example, the "Please wait..." text on changing frames )
+
 const toast = {
     showText:(text)=>{
         e_toast.innerText = text;
-        console.log('desgraça ruim')
         e_toast.style.display = "block";
     },
     close:()=>{
@@ -58,32 +58,54 @@ const toast = {
     }
 };
 
-//initialization, generate season list, then apply frames, apply ui values and load episode list
 DATA.seasons.forEach((se,si)=>{e_selector_season.insertAdjacentHTML("beforeend", `<option value="${si}">${se.name}</option>`);});
 applyFrame();
 updateUILists();
 updateUIValues();
+setParamsInUrl();
 
-e_image_frame.addEventListener("load", ()=>{toast.close()});//if the image is succefully loaded, closes the loading toast displayed by the applyFrame() function
-e_image_frame.addEventListener("error", ()=>{toast.showText("❌ Failed to load the image!")})//if there is an error when loading the image, it will display a error msg
-e_selector_season.addEventListener('change',(e)=>{//case the season selector is changed
-    SEL_SEASONID = e.target.value;//apply selected seasonID value
+window.addEventListener("popstate", (ev)=>{
+    SEL_SEASONID = ev.state.s;
+    SEL_EPISODEID = ev.state.e;
+    SEL_FRAMENUM = ev.state.f;
     applyFrame();
-    updateUILists();//reloads the episode list for the selected seasonID in the episodes selector
-    updateParams();//update the url params
+    updateUILists();
+    updateUIValues();
+})
+e_image_frame.addEventListener("load", ()=>{toast.close()});
+e_image_frame.addEventListener("error", (e)=>{toast.showText("❌ Failed to load the image!");})
+e_selector_season.addEventListener('change',(e)=>{
+    SEL_SEASONID = e.target.value;
+    applyFrame();
+    updateUILists();
+    addHistoryEntry();
 
 });
 e_selector_episode.addEventListener('change',(e)=>{
-    SEL_EPISODEID = e.target.value;//apply selected episodeID value
-    e_selector_frame.max = getAppliedOBJ().episode.frames; //apply the episode total frames as max number in the frames selector
+    SEL_EPISODEID = e.target.value;
+    e_selector_frame.max = getAppliedOBJ().episode.frames; 
     applyFrame();
-    updateParams();//update url params
+    addHistoryEntry();
 });
 e_selector_frame.addEventListener('change',(e)=>{
-    if(e.target.checkValidity()){ //checks if the value is a valid value (more than 0, less than total frames number (max))
-        SEL_FRAMENUM = e.target.value;//apply selected frame value
-        applyFrame();//finally apply the frame
+    if(e.target.checkValidity()){
+        SEL_FRAMENUM = e.target.value;
+        applyFrame();
+        addHistoryEntry();
+        updateUIValues();
     };
+});
+e_btn_frameup.addEventListener("click", (e)=>{
+    SEL_FRAMENUM= parseInt(SEL_FRAMENUM)+1;
+    applyFrame();
+    addHistoryEntry();
+    updateUIValues();
+});
+e_btn_framedown.addEventListener("click", (e)=>{
+    SEL_FRAMENUM= parseInt(SEL_FRAMENUM)-1;
+    applyFrame();
+    addHistoryEntry();
+    updateUIValues();
 });
 e_btn_download.addEventListener('click',()=>{
     toast.showText("⌛ Downloading, please wait...");
@@ -97,7 +119,7 @@ e_btn_download.addEventListener('click',()=>{
             dle.download = `${DATA.name_alt}_${getAppliedOBJ().season.name}_${getAppliedOBJ().episode.name}_Frame-${SEL_FRAMENUM}.jpg`.replaceAll(" ","-");
             dle.click();
             toast.showText(`✅ File "${dle.download}" downloaded succefully!`);
-            setTimeout(toast.close, 10000);
+            setTimeout(toast.close, 1000);
         };
         r.readAsDataURL(blob)
     });
@@ -107,19 +129,18 @@ e_btn_random.addEventListener('click', ()=>{
     SEL_FRAMENUM = null;
     SEL_SEASONID = null;
     applyFrame();
-    updateParams();
     updateUILists();
     updateUIValues();
+    addHistoryEntry();
 })
 
-function applyFrame(){//apply the selected frame in the img element
-    toast.showText("⌛ Please Wait...");//shows the loading text in the screen
-    //if the selected frame is null, generate a random number for it
-    //(ex: when none params are specifield, the page will show a random frame)
+function applyFrame(){
+    toast.showText("⌛ Please Wait...");
     SEL_SEASONID = validateValue(SEL_SEASONID, DATA.seasons.length-1, 0);
     SEL_EPISODEID = validateValue(SEL_EPISODEID, getAppliedOBJ().season.episodes.length-1, 0);
     SEL_FRAMENUM = validateValue(SEL_FRAMENUM, getAppliedOBJ().episode.frames, 1);
-    e_image_frame.src = getImageUrl();//get the url, and apply the image in the img element
+    page_title.innerText = `${DATA.name_alt} Frame Viewer - ${getAppliedOBJ().season.name}, ${getAppliedOBJ().episode.name}, Frame ${SEL_FRAMENUM}`;
+    e_image_frame.src = getImageUrl();
 }
 function getAppliedOBJ(){
     return {season:DATA.seasons[SEL_SEASONID], episode:DATA.seasons[SEL_SEASONID].episodes[SEL_EPISODEID]}
@@ -130,10 +151,30 @@ function getImageUrl(){
 function getRand(max, min){
     return Math.floor(Math.random() * max) + min; 
 }
+function addHistoryEntry(){
+    history.pushState({s:SEL_SEASONID,e:SEL_EPISODEID, f:SEL_FRAMENUM}, "", `?scid=${SEL_SEASONID}&epid=${SEL_EPISODEID}&fr=${SEL_FRAMENUM}`);
+}
+function setParamsInUrl(){
+    url.searchParams.set("scid",SEL_SEASONID);
+    url.searchParams.set("epid",SEL_EPISODEID);
+    url.searchParams.set("fr",SEL_FRAMENUM);
+    history.replaceState({s:SEL_SEASONID,e:SEL_EPISODEID, f:SEL_FRAMENUM},"",url);
+}
 function updateUIValues(){
     e_selector_season.value = SEL_SEASONID;
     e_selector_episode.value = SEL_EPISODEID;
     e_selector_frame.value = SEL_FRAMENUM;
+    if(SEL_FRAMENUM == e_selector_frame.min){
+        e_btn_framedown.disabled = true;
+    }else{
+        e_btn_framedown.disabled = false;
+    }
+    if(SEL_FRAMENUM == e_selector_frame.max){
+        e_btn_frameup.disabled = true;
+    }else{
+        e_btn_frameup.disabled = false;
+    }
+
 }
 function updateUILists(){
     getAppliedOBJ().season.episodes.forEach((se,si)=>{
@@ -141,22 +182,16 @@ function updateUILists(){
     });
     e_selector_frame.max = getAppliedOBJ().episode.frames;
 }
-function updateParams(){
-    url.searchParams.set('scid', SEL_SEASONID);
-    url.searchParams.set('epid', SEL_EPISODEID);
-    url.searchParams.set('fr', SEL_FRAMENUM);
-    window.history.replaceState({}, '', url.href);
-}
 function validateValue(value, max, min){
-    value = parseInt(value);
     min = parseInt(min);
     max = parseInt(max);
     if(value == null){
-        value = getRand(max, min)
-    } else if (value > max) {
+        value = getRand(max, min);
+    } else if (parseInt(value) > max) {
         value = max;
-    } else if (value < min) {
+    } else if (parseInt(value) < min) {
         value = min;
     };
+
     return value;
 }
