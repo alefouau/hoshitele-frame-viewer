@@ -45,6 +45,7 @@ let e_btn_random = document.getElementById("btn-random");
 let e_btn_download = document.getElementById("btn-download");
 let e_btn_frameup = document.getElementById("btn-frameup");
 let e_btn_framedown = document.getElementById("btn-framedown")
+let e_btn_menu = document.getElementById("btn-menu")
 let e_toast = document.getElementById("toast");
 
 const toast = {
@@ -95,6 +96,10 @@ e_selector_frame.addEventListener('change',(e)=>{
         updateUIValues();
     };
 });
+e_btn_menu.addEventListener("click", ()=>{
+    toast.showText("ℹ️ Coming soon... (Favorites list, about page...)");
+    setTimeout(toast.close, 3000);
+})
 e_btn_frameup.addEventListener("click", (e)=>{
     SEL_FRAMENUM= parseInt(SEL_FRAMENUM)+1;
     applyFrame();
