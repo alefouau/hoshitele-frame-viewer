@@ -151,7 +151,9 @@ function getAppliedOBJ(){
     return {season:DATA.seasons[SEL_SEASONID], episode:DATA.seasons[SEL_SEASONID].episodes[SEL_EPISODEID]}
 }
 function getImageUrl(){
-    return DATA.base_url + getAppliedOBJ().season.path + getAppliedOBJ().episode.path + DATA.frames_path_pattern.replace("{x}", SEL_FRAMENUM);
+    let fullUrl = DATA.base_url + getAppliedOBJ().season.path + getAppliedOBJ().episode.path + DATA.frames_path_pattern.replace("{x}", SEL_FRAMENUM);
+    let proxiedUrl = "https://images.weserv.nl/?url="+encodeURIComponent(fullUrl.replace('https://', ''));
+    return proxiedUrl;
 }
 function getRand(max, min){
     return Math.floor(Math.random() * max) + min; 
