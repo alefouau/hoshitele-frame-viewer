@@ -9,9 +9,15 @@
 <body>
     <img id="image-frame">
     <div id="toast"></div>
-    <div id="controls">
-        <button id="btn-menu">☰
-        </button>
+    <div id="ui">
+        <div id="info-and-buttons">
+            <button id="btn-menu">☰</button>
+            <span id="timestamp">HH:MM:SS</span>
+            <div id="buttons">
+                <button id="btn-random" type="button" class="ic">Random</button>
+                <button id="btn-download" type="button" class="ic">Download</button>
+            </div>
+        </div>
         <div id="selectors">
             <select id="selector-season"></select>
             <select id="selector-episode"></select>
@@ -19,10 +25,6 @@
                 <input type="number" id="selector-frame" min="1">
                 <button id="btn-framedown"><</button><button id="btn-frameup">></button>
             </div>
-        </div>
-        <div id="buttons">
-            <button id="btn-random" type="button">Random</button>
-            <button id="btn-download" type="button">Download</button>
         </div>
     </div>
 </body>

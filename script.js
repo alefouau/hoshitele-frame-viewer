@@ -47,6 +47,21 @@ let e_btn_frameup = document.getElementById("btn-frameup");
 let e_btn_framedown = document.getElementById("btn-framedown")
 let e_btn_menu = document.getElementById("btn-menu")
 let e_toast = document.getElementById("toast");
+let e_timestamp = document.getElementById("timestamp");
+let e_ui = document.getElementById("ui");
+
+let toast_timeout;
+let ui_timeout;
+
+function showUi(){
+    if(ui_timeout){
+        clearTimeout(ui_timeout);
+        e_ui.classList.remove('inactive');
+    };
+    ui_timeout = setTimeout(()=>{e_ui.classList.add('inactive');}, 5000 );
+}
+
+document.addEventListener('mousemove', showUi);
 
 const toast = {
     showText:(text)=>{
@@ -64,6 +79,7 @@ applyFrame();
 updateUILists();
 updateUIValues();
 setParamsInUrl();
+showUi();
 
 window.addEventListener("popstate", (ev)=>{
     SEL_SEASONID = ev.state.s;
@@ -97,8 +113,9 @@ e_selector_frame.addEventListener('change',(e)=>{
     };
 });
 e_btn_menu.addEventListener("click", ()=>{
-    toast.showText("ℹ️ Coming soon... (Favorites list, about page...)");
-    setTimeout(toast.close, 3000);
+    clearTimeout(toast_timeout);
+    toast.showText("ℹ️ a recode is coming soon... for now, no favlists or subtitles");
+    toast_timeout = setTimeout(toast.close, 3000);
 })
 e_btn_frameup.addEventListener("click", (e)=>{
     SEL_FRAMENUM= parseInt(SEL_FRAMENUM)+1;
@@ -146,6 +163,7 @@ function applyFrame(){
     SEL_FRAMENUM = validateValue(SEL_FRAMENUM, getAppliedOBJ().episode.frames, 1);
     page_title.innerText = `${DATA.name_alt} Frame Viewer - ${getAppliedOBJ().season.name}, ${getAppliedOBJ().episode.name}, Frame ${SEL_FRAMENUM}`;
     e_image_frame.src = getImageUrl();
+    setTimestamp();
 }
 function getAppliedOBJ(){
     return {season:DATA.seasons[SEL_SEASONID], episode:DATA.seasons[SEL_SEASONID].episodes[SEL_EPISODEID]}
@@ -182,6 +200,16 @@ function updateUIValues(){
         e_btn_frameup.disabled = false;
     }
 
+}
+function setTimestamp(){
+    let totalsecs = SEL_FRAMENUM/parseInt(DATA.fps_chopped);
+    let sec = totalsecs % 60;
+    let min = (totalsecs - sec) / 60 % 60;
+    let hour = (totalsecs - sec - min * 60) / 3600 ;
+    e_timestamp.innerText = `${hour.toString().padStart(2,"0")}:${min.toString().padStart(2,"0")}:${sec.toString().padStart(2,"0")}`;
+}
+function timestampToFrame(){
+    let time = new Date()
 }
 function updateUILists(){
     getAppliedOBJ().season.episodes.forEach((se,si)=>{
