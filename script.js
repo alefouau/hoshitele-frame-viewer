@@ -30,7 +30,7 @@ const DATA = {
     ]
 }
 
-//-------------------------code v0.2.5---------------------------
+//-------------------------code v0.2.8---------------------------
 let url = new URL(window.location.href);
 let SEL_SEASONID = url.searchParams.get('scid');
 let SEL_EPISODEID = url.searchParams.get('epid');
@@ -88,6 +88,34 @@ window.addEventListener("popstate", (ev)=>{
     applyFrame();
     updateUILists();
     updateUIValues();
+});
+window.addEventListener('keydown', (e)=>{
+    let key = e.key.toUpperCase();
+    showUi();
+    if(key == "ARROWUP" || key == "W"){
+        SEL_EPISODEID = parseInt(SEL_EPISODEID)+1;
+        applyFrame();
+        updateUIValues();
+        setParamsInUrl();
+    };
+    if(key == "ARROWDOWN" || key == "S"){
+        SEL_EPISODEID = parseInt(SEL_EPISODEID)-1;
+        applyFrame();
+        updateUIValues();
+        setParamsInUrl();
+    };
+    if(key == "ARROWLEFT" || key == "A"){
+        SEL_FRAMENUM = parseInt(SEL_FRAMENUM)-1;
+        applyFrame();
+        updateUIValues();
+        setParamsInUrl();
+    };
+    if(key == "ARROWRIGHT" || key == "D"){
+        SEL_FRAMENUM = parseInt(SEL_FRAMENUM)+1;
+        applyFrame();
+        updateUIValues();
+        setParamsInUrl();
+    };
 })
 e_image_frame.addEventListener("load", ()=>{toast.close()});
 e_image_frame.addEventListener("error", (e)=>{toast.showText("❌ Failed to load the image!");})
@@ -161,6 +189,16 @@ function applyFrame(){
     SEL_SEASONID = validateValue(SEL_SEASONID, DATA.seasons.length-1, 0);
     SEL_EPISODEID = validateValue(SEL_EPISODEID, getAppliedOBJ().season.episodes.length-1, 0);
     SEL_FRAMENUM = validateValue(SEL_FRAMENUM, getAppliedOBJ().episode.frames, 1);
+    if(SEL_FRAMENUM == e_selector_frame.min){
+        e_btn_framedown.disabled = true;
+    }else{
+        e_btn_framedown.disabled = false;
+    }
+    if(SEL_FRAMENUM == e_selector_frame.max){
+        e_btn_frameup.disabled = true;
+    }else{
+        e_btn_frameup.disabled = false;
+    }
     page_title.innerText = `${DATA.name_alt} Frame Viewer - ${getAppliedOBJ().season.name}, ${getAppliedOBJ().episode.name}, Frame ${SEL_FRAMENUM}`;
     e_image_frame.src = getImageUrl();
     setTimestamp();
@@ -189,16 +227,6 @@ function updateUIValues(){
     e_selector_season.value = SEL_SEASONID;
     e_selector_episode.value = SEL_EPISODEID;
     e_selector_frame.value = SEL_FRAMENUM;
-    if(SEL_FRAMENUM == e_selector_frame.min){
-        e_btn_framedown.disabled = true;
-    }else{
-        e_btn_framedown.disabled = false;
-    }
-    if(SEL_FRAMENUM == e_selector_frame.max){
-        e_btn_frameup.disabled = true;
-    }else{
-        e_btn_frameup.disabled = false;
-    }
 
 }
 function setTimestamp(){
@@ -207,9 +235,6 @@ function setTimestamp(){
     let min = (totalsecs - sec) / 60 % 60;
     let hour = (totalsecs - sec - min * 60) / 3600 ;
     e_timestamp.innerText = `${hour.toString().padStart(2,"0")}:${min.toString().padStart(2,"0")}:${sec.toString().padStart(2,"0")}`;
-}
-function timestampToFrame(){
-    let time = new Date()
 }
 function updateUILists(){
     getAppliedOBJ().season.episodes.forEach((se,si)=>{
